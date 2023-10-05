@@ -71,13 +71,22 @@ int main()
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawTextureEx(renderTexture.texture, Vector2Zero(), 0, renderScale, WHITE);
+        DrawTextureEx(
+            renderTexture.texture,
+            (Vector2){
+                (windowWidth - renderScale * RENDER_WIDTH_PIXELS) / 2,
+                (windowHeight - renderScale * RENDER_HEIGHT_PIXELS) / 2
+            },
+            0,
+            renderScale,
+            WHITE
+        );
 
         //Debug drawing
-        for (short x = 0; x < windowWidth; x += RENDER_WIDTH_PIXELS)
+        /* for (short x = 0; x < windowWidth; x += RENDER_WIDTH_PIXELS)
         { DrawLine(x, 0, x, windowHeight, RED); }
         for (short y = 0; y < windowHeight; y += RENDER_HEIGHT_PIXELS)
-        { DrawLine(0, y, windowWidth, y, RED); }
+        { DrawLine(0, y, windowWidth, y, RED); } */
         
         DrawText(TextFormat("FPS: %i", GetFPS()), 5, 5, 15, WHITE);
 
