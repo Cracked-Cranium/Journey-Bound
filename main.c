@@ -40,11 +40,32 @@ int main()
 
     Texture2D GameSprites = LoadTexture("sprites/spritesheet.png");
     Texture2D tileTexture = LoadTexture("sprites/texture.png");
+    Texture2D playerTexture = LoadTexture("sprites/player.png");
+
+    Camera2D camera = (Camera2D){
+        {RENDER_WIDTH_PIXELS * 0.5, RENDER_HEIGHT_PIXELS * 0.5},
+        {0, 0},
+        0,
+        1};
+
+    Vector2 playerPos = {0, 0};
 
     while (!WindowShouldClose())
     {
         windowWidth = GetScreenWidth();
         windowHeight = GetScreenHeight();
+
+        short speed = 50;
+        if (IsKeyDown(KEY_RIGHT))
+            playerPos.x += GetFrameTime() * speed;
+        if (IsKeyDown(KEY_LEFT))
+            playerPos.x -= GetFrameTime() * speed;
+        if (IsKeyDown(KEY_DOWN))
+            playerPos.y += GetFrameTime() * speed;
+        if (IsKeyDown(KEY_UP))
+            playerPos.y -= GetFrameTime() * speed;
+
+        camera.target = playerPos;
 
         // Update the render scale when the window size changes
         if (IsWindowResized())
@@ -52,6 +73,8 @@ int main()
 
         //===Draw game content===
         BeginTextureMode(renderTexture);
+        BeginMode2D(camera);
+
         ClearBackground(LIGHTGRAY);
 
         // Draw tiles
@@ -66,19 +89,32 @@ int main()
             }
         }
 
+        DrawTexture(playerTexture, round(playerPos.x) - 8, round(playerPos.y) - 9, WHITE);
+
+        EndMode2D();
         EndTextureMode();
 
         //===Draw render and debug===
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawTextureEx(
+
+        short renderTargetWidth = RENDER_WIDTH_PIXELS * renderScale;
+        short renderTargetHeight = RENDER_HEIGHT_PIXELS * renderScale;
+        DrawTexturePro(
             renderTexture.texture,
-            (Vector2){
-                (windowWidth - renderScale * RENDER_WIDTH_PIXELS) * 0.5,
-                (windowHeight - renderScale * RENDER_HEIGHT_PIXELS) * 0.5},
+            (Rectangle){
+                0,
+                0,
+                RENDER_WIDTH_PIXELS,
+                -renderTexture.texture.height}, //Negative, because textures are upside-down
+            (Rectangle){
+                (windowWidth - renderTargetWidth) * 0.5,
+                (windowHeight - renderTargetHeight) * 0.5,
+                renderTargetWidth,
+                renderTargetHeight},
+            Vector2Zero(),
             0,
-            renderScale,
             WHITE);
 
         // Debug drawing
