@@ -12,3 +12,10 @@ This game is just for fun and is not really made to be the best of the best or s
 
 We use Raylib as the rendering engine.
 Link to Raylib: https://www.raylib.com
+
+## Compiling
+We have included build scripts for each platform. (RAYLIB NEEDED!)
+### Windows
+run the "build.exe" for Windows
+### Mac
+run the "build.sh" for Mac -- NOTE: If you don't have permission to run the build.sh file, type ``` chmod 777 build.sh ``` in the terminal to change permission level for the build file.
