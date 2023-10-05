@@ -2,6 +2,7 @@
 #include "enums.c"
 #include "structs.c"
 
+#define TILE_SIZE_PIXELS (short)16 // 16 * 16
 #define CHUNK_SIZE 256 // 16 * 16
 #define WINDOW_WIDTH GetScreenWidth
 #define WINDOW_HEIGHT GetScreenHeight
