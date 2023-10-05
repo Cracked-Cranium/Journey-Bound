@@ -1,5 +1,6 @@
 #!/bin/bash
 
-rm App
-cc main.c `pkg-config --libs --cflags raylib` -o App
-./App
+if cc main.c -framework IOKit -framework Cocoa -framework OpenGL $(pkg-config --libs --cflags raylib) -o program;
+then
+    ./program
+fi
