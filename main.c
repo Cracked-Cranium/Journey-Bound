@@ -7,8 +7,8 @@
 #define TILE_SIZE_PIXELS (short)16
 #define RENDER_WIDTH_TILES (short)18
 #define RENDER_HEIGHT_TILES (short)12
-#define RENDER_WIDTH_PIXELS RENDER_WIDTH_TILES *TILE_SIZE_PIXELS
-#define RENDER_HEIGHT_PIXELS RENDER_HEIGHT_TILES *TILE_SIZE_PIXELS
+#define RENDER_WIDTH_PIXELS (RENDER_WIDTH_TILES * TILE_SIZE_PIXELS)
+#define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_TILES * TILE_SIZE_PIXELS)
 
 // Returns the largest scale the render could be without overflowing the window
 short GetMaxRenderScale(short windowWidth, short windowHeight)
