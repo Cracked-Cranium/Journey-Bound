@@ -55,13 +55,13 @@ int main()
 
         Vector2 playerMovement = {0, 0};
 
-        if (IsKeyDown(KEY_RIGHT))
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT))
             playerMovement.x++;
-        if (IsKeyDown(KEY_LEFT))
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_LEFT))
             playerMovement.x--;
-        if (IsKeyDown(KEY_DOWN))
+        if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))
             playerMovement.y++;
-        if (IsKeyDown(KEY_UP))
+        if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
             playerMovement.y--;
 
         if (playerMovement.x != 0 || playerMovement.y != 0)
