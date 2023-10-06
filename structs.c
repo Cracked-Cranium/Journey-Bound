@@ -46,6 +46,6 @@ typedef struct Chunk
 {
     Tile tiles[16 * 16];
     Object *objs;
-    DynObject *dyn_objs
+    DynObject *dyn_objs;
 } Chunk;
 

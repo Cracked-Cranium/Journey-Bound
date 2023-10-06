@@ -36,6 +36,33 @@ float GetMaxRenderScale(short window_width, short window_height)
     return fminf(horizontal_scale, vertical_scale);
 }
 
+void DrawGroundTiles(short *game_map, Texture2D *sprite_sheet_ptr)
+{
+    for (short y = 0; y < MAP_HEIGHT_TILES; y++)
+    {
+        for (short x = 0; x < MAP_WIDTH_TILES; x++)
+        {
+            short index = game_map[x + y * MAP_WIDTH_TILES];
+
+            DrawTexturePro(
+                *sprite_sheet_ptr,
+                (Rectangle){
+                    (index % TILE_SIZE_UNITS) * TILE_SIZE_UNITS,
+                    (index / TILE_SIZE_UNITS) * TILE_SIZE_UNITS,
+                    TILE_SIZE_UNITS,
+                    TILE_SIZE_UNITS},
+                (Rectangle){
+                    x * TILE_SIZE_PIXELS,
+                    y * TILE_SIZE_PIXELS,
+                    TILE_SIZE_PIXELS,
+                    TILE_SIZE_PIXELS},
+                Vector2Zero(),
+                0,
+                WHITE);
+        }
+    }
+}
+
 int main()
 {
     short window_width = RENDER_WIDTH_PIXELS;
@@ -50,6 +77,7 @@ int main()
 
     Texture2D tile_texture = LoadTexture("sprites/texture.png");
     Texture2D player_texture = LoadTexture("sprites/player.png");
+    Texture2D ground_tiles_sprite_sheet = LoadTexture("sprites/BlockSprites.png");
 
     Camera2D game_camera = (Camera2D){
         {RENDER_WIDTH_PIXELS * 0.5, RENDER_HEIGHT_PIXELS * 0.5},
@@ -63,18 +91,18 @@ int main()
     short player_speed = 256;
 
     //Preliminary map array
-    short map[MAP_WIDTH_TILES * MAP_HEIGHT_TILES];
+    short game_map[MAP_WIDTH_TILES * MAP_HEIGHT_TILES];
 
     for (short y = 0; y < MAP_HEIGHT_TILES; y++)
     {
         for (short x = 0; x < MAP_WIDTH_TILES; x++)
         {
+            game_map[x + y * MAP_WIDTH_TILES] = (short)0;
+            
             if (x % 6 == 0 && y % 8 == 0)
             {
-                map[x + y * MAP_WIDTH_TILES] = (short)1;
+                game_map[x + y * MAP_WIDTH_TILES] = (short)2;
             }
-            
-            map[x + y * MAP_WIDTH_TILES] = (short)0;
         }
     }
 
@@ -141,20 +169,15 @@ int main()
         */
 
         BeginDrawing();
+        ClearBackground((Color){32, 32, 32});
+
         BeginTextureMode(game_render_texture);
+        ClearBackground(BLACK);
+
         BeginMode2D(game_camera);
 
-        ClearBackground((Color){8, 8, 8}); //Default color in camera
-
         // Draw tiles
-        for (short y = 0; y < MAP_HEIGHT_TILES; y++)
-        {
-            for (short x = 0; x < MAP_WIDTH_TILES; x++)
-            {
-                Color color;
-                
-            }
-        }
+        DrawGroundTiles(game_map, &ground_tiles_sprite_sheet);
 
         DrawTextureEx(
             player_texture,
@@ -168,8 +191,6 @@ int main()
         EndTextureMode();
 
         // Draw render and debug
-        ClearBackground(BLACK);
-
         short render_target_width = RENDER_WIDTH_PIXELS * render_scale;
         short render_target_height = RENDER_HEIGHT_PIXELS * render_scale;
         DrawTexturePro(
