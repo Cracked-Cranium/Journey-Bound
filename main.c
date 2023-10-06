@@ -3,6 +3,7 @@
 
 #include "enums.c"
 #include "structs.c"
+#include "item_functions.c"
 
 #define TILE_SIZE_PIXELS (short)16
 #define RENDER_WIDTH_TILES (short)18
@@ -72,7 +73,7 @@ int main()
             renderScale = GetMaxRenderScale(windowWidth, windowHeight);
 
         BeginTextureMode(renderTexture); // Draw game content
-        BeginMode2D(camera); // Draw in camera view
+        BeginMode2D(camera);             // Draw in camera view
 
         ClearBackground(LIGHTGRAY);
 
@@ -91,13 +92,12 @@ int main()
         DrawTexture(playerTexture, round(playerPos.x) - 8, round(playerPos.y) - 9, WHITE);
 
         EndMode2D(); // Draw pixel perfect, but not in camera view
-        
+
         EndTextureMode();
 
         // Draw render and debug
         BeginDrawing();
         ClearBackground(BLACK);
-
 
         short renderTargetWidth = RENDER_WIDTH_PIXELS * renderScale;
         short renderTargetHeight = RENDER_HEIGHT_PIXELS * renderScale;
@@ -107,7 +107,7 @@ int main()
                 0,
                 0,
                 RENDER_WIDTH_PIXELS,
-                -renderTexture.texture.height}, //Negative, because textures are upside-down
+                -renderTexture.texture.height}, // Negative, because textures are upside-down
             (Rectangle){
                 (windowWidth - renderTargetWidth) * 0.5,
                 (windowHeight - renderTargetHeight) * 0.5,

@@ -4,3 +4,8 @@ typedef struct Tile
     short occupant_texture_id;
     bool solid;
 } Tile;
+
+typedef struct Item
+{
+    unsigned short data;
+} Item;
