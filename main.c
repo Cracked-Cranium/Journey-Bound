@@ -22,6 +22,9 @@
 #define RENDER_WIDTH_PIXELS (RENDER_WIDTH_UNITS * PIXELS_PER_UNIT)
 #define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_UNITS * PIXELS_PER_UNIT)
 
+#define MAP_WIDTH_TILES (short)32
+#define MAP_HEIGHT_TILES (short)32
+
 float GetMaxRenderScale(short window_width, short window_height)
 {
     // targetSize = renderSize * renderScale
@@ -35,11 +38,11 @@ float GetMaxRenderScale(short window_width, short window_height)
 
 int main()
 {
-    Tile map[256 * 6];
     short window_width = RENDER_WIDTH_PIXELS;
     short window_height = RENDER_HEIGHT_PIXELS;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE); // Make the window resizeble
+
     InitWindow(window_width, window_height, "Journey-Bound window testing");
 
     RenderTexture2D game_render_texture = LoadRenderTexture(RENDER_WIDTH_PIXELS, RENDER_HEIGHT_PIXELS); // The game will be rendered to a texture before being scaled to fit the players window
@@ -58,6 +61,22 @@ int main()
     short player_pixel_y = 0;
     Vector2 player_position = {0, 0};
     short player_speed = 256;
+
+    //Preliminary map array
+    short map[MAP_WIDTH_TILES * MAP_HEIGHT_TILES];
+
+    for (short y = 0; y < MAP_HEIGHT_TILES; y++)
+    {
+        for (short x = 0; x < MAP_WIDTH_TILES; x++)
+        {
+            if (x % 6 == 0 && y % 8 == 0)
+            {
+                map[x + y * MAP_WIDTH_TILES] = (short)1;
+            }
+            
+            map[x + y * MAP_WIDTH_TILES] = (short)0;
+        }
+    }
 
     while (!WindowShouldClose())
     {
@@ -125,22 +144,15 @@ int main()
         BeginTextureMode(game_render_texture);
         BeginMode2D(game_camera);
 
-        ClearBackground(LIGHTGRAY);
+        ClearBackground((Color){8, 8, 8}); //Default color in camera
 
         // Draw tiles
-        for (short y = 0; y < RENDER_HEIGHT_TILES; y++)
+        for (short y = 0; y < MAP_HEIGHT_TILES; y++)
         {
-            for (short x = 0; x < RENDER_WIDTH_TILES; x++)
+            for (short x = 0; x < MAP_WIDTH_TILES; x++)
             {
-                if ((x + y) % 2 == 0)
-                {
-                    DrawTextureEx(
-                        tile_texture,
-                        (Vector2){x * TILE_SIZE_PIXELS, y * TILE_SIZE_PIXELS},
-                        0,
-                        PIXELS_PER_UNIT,
-                        WHITE);
-                }
+                Color color;
+                
             }
         }
 
