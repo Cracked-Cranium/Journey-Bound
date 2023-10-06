@@ -1,4 +1,5 @@
 #include "raylib.h"
+
 typedef struct Tile
 {
     short base_texture_id;

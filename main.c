@@ -22,17 +22,28 @@
 #define RENDER_WIDTH_PIXELS (RENDER_WIDTH_UNITS * PIXELS_PER_UNIT)
 #define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_UNITS * PIXELS_PER_UNIT)
 
+float MaxRenderScale(short windowWidth, short windowHeight)
+{
+    // targetSize = renderSize * renderScale
+    // renderScale = targetSize / renderSize
+
+    float horizontalScale = windowWidth / (float)RENDER_WIDTH_PIXELS;
+    float verticalScale = windowHeight / (float)RENDER_HEIGHT_PIXELS;
+
+    return fminf(horizontalScale, verticalScale);
+}
+
 int main()
 {
     Tile map[256 * 6];
-    short windowWidth = RENDER_WIDTH_PIXELS * 4.5;
-    short windowHeight = RENDER_HEIGHT_PIXELS * 4.5;
+    short windowWidth = RENDER_WIDTH_PIXELS;
+    short windowHeight = RENDER_HEIGHT_PIXELS;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE); // Make the window resizeble
     InitWindow(windowWidth, windowHeight, "Journey-Bound window testing");
 
     RenderTexture2D renderTexture = LoadRenderTexture(RENDER_WIDTH_PIXELS, RENDER_HEIGHT_PIXELS); // The game will be rendered to a texture before being scaled to fit the players window
-    float renderScale = 1;
+    float renderScale = 0.75;
 
     Texture2D tileTexture = LoadTexture("sprites/texture.png");
     Texture2D playerTexture = LoadTexture("sprites/player.png");
@@ -46,12 +57,17 @@ int main()
     short playerPixelX = 0;
     short playerPixelY = 0;
     Vector2 playerPos = {0, 0};
-    short playerSpeed = 300;
+    short playerSpeed = 256;
 
     while (!WindowShouldClose())
     {
         windowWidth = GetScreenWidth();
         windowHeight = GetScreenHeight();
+
+        if (IsWindowResized())
+        {
+            renderScale = MaxRenderScale(windowWidth, windowHeight);
+        }
 
         Vector2 playerMovement = {0, 0};
 
