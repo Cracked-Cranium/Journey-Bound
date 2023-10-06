@@ -10,6 +10,12 @@
 #define RENDER_WIDTH_PIXELS (RENDER_WIDTH_TILES * TILE_SIZE_PIXELS)
 #define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_TILES * TILE_SIZE_PIXELS)
 
+typedef struct test
+{
+    short item1;
+    char item2;
+} test;
+
 // Returns the largest scale the render could be without overflowing the window
 short GetMaxRenderScale(short windowWidth, short windowHeight)
 {
@@ -27,8 +33,8 @@ short GetMaxRenderScale(short windowWidth, short windowHeight)
 
 int main()
 {
+    sizeof(test);
     Tile map[256 * 6];
-
     short windowWidth = RENDER_WIDTH_PIXELS * 4.5;
     short windowHeight = RENDER_HEIGHT_PIXELS * 4.5;
 
@@ -52,18 +58,19 @@ int main()
 
     while (!WindowShouldClose())
     {
+        float deltaTime = GetFrameTime();
         windowWidth = GetScreenWidth();
         windowHeight = GetScreenHeight();
 
         short speed = 50;
         if (IsKeyDown(KEY_RIGHT))
-            playerPos.x += GetFrameTime() * speed;
+            playerPos.x += deltaTime * speed;
         if (IsKeyDown(KEY_LEFT))
-            playerPos.x -= GetFrameTime() * speed;
+            playerPos.x -= deltaTime * speed;
         if (IsKeyDown(KEY_DOWN))
-            playerPos.y += GetFrameTime() * speed;
+            playerPos.y += deltaTime * speed;
         if (IsKeyDown(KEY_UP))
-            playerPos.y -= GetFrameTime() * speed;
+            playerPos.y -= deltaTime * speed;
 
         camera.target = playerPos;
 
@@ -72,7 +79,7 @@ int main()
             renderScale = GetMaxRenderScale(windowWidth, windowHeight);
 
         BeginTextureMode(renderTexture); // Draw game content
-        BeginMode2D(camera); // Draw in camera view
+        BeginMode2D(camera);             // Draw in camera view
 
         ClearBackground(LIGHTGRAY);
 
@@ -91,13 +98,12 @@ int main()
         DrawTexture(playerTexture, round(playerPos.x) - 8, round(playerPos.y) - 9, WHITE);
 
         EndMode2D(); // Draw pixel perfect, but not in camera view
-        
+
         EndTextureMode();
 
         // Draw render and debug
         BeginDrawing();
         ClearBackground(BLACK);
-
 
         short renderTargetWidth = RENDER_WIDTH_PIXELS * renderScale;
         short renderTargetHeight = RENDER_HEIGHT_PIXELS * renderScale;
@@ -107,7 +113,7 @@ int main()
                 0,
                 0,
                 RENDER_WIDTH_PIXELS,
-                -renderTexture.texture.height}, //Negative, because textures are upside-down
+                -renderTexture.texture.height}, // Negative, because textures are upside-down
             (Rectangle){
                 (windowWidth - renderTargetWidth) * 0.5,
                 (windowHeight - renderTargetHeight) * 0.5,
@@ -118,7 +124,7 @@ int main()
             WHITE);
 
         // Debug drawing
-        /* for (short x = 0; x < windowWidth; x += RENDER_WIDTH_PIXELS)
+        /*for (short x = 0; x < windowWidth; x += RENDER_WIDTH_PIXELS)
         { DrawLine(x, 0, x, windowHeight, RED); }
         for (short y = 0; y < windowHeight; y += RENDER_HEIGHT_PIXELS)
         { DrawLine(0, y, windowWidth, y, RED); } */
