@@ -1,3 +1,5 @@
+#include "stdio.h"
+
 #include "raylib.h"
 #include "raymath.h"
 
@@ -5,26 +7,20 @@
 #include "structs.c"
 #include "item_functions.c"
 
-#define TILE_SIZE_PIXELS (short)16
+#define PIXELS_PER_UNIT (short)4
+
+#define TILE_SIZE_UNITS (short)16
+
+#define TILE_SIZE_PIXELS (TILE_SIZE_UNITS * PIXELS_PER_UNIT)
+
 #define RENDER_WIDTH_TILES (short)18
 #define RENDER_HEIGHT_TILES (short)12
-#define RENDER_WIDTH_PIXELS (RENDER_WIDTH_TILES * TILE_SIZE_PIXELS)
-#define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_TILES * TILE_SIZE_PIXELS)
 
-// Returns the largest scale the render could be without overflowing the window
-short GetMaxRenderScale(short windowWidth, short windowHeight)
-{
-    short renderScale = 1;
+#define RENDER_WIDTH_UNITS (RENDER_WIDTH_TILES * TILE_SIZE_UNITS)
+#define RENDER_HEIGHT_UNITS (RENDER_HEIGHT_TILES * TILE_SIZE_UNITS)
 
-    while (
-        RENDER_WIDTH_PIXELS * (renderScale + 1) <= windowWidth &&
-        RENDER_HEIGHT_PIXELS * (renderScale + 1) <= windowHeight)
-    {
-        renderScale++;
-    }
-
-    return renderScale;
-}
+#define RENDER_WIDTH_PIXELS (RENDER_WIDTH_UNITS * PIXELS_PER_UNIT)
+#define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_UNITS * PIXELS_PER_UNIT)
 
 int main()
 {
@@ -36,9 +32,8 @@ int main()
     InitWindow(windowWidth, windowHeight, "Journey-Bound window testing");
 
     RenderTexture2D renderTexture = LoadRenderTexture(RENDER_WIDTH_PIXELS, RENDER_HEIGHT_PIXELS); // The game will be rendered to a texture before being scaled to fit the players window
-    short renderScale = GetMaxRenderScale(windowWidth, windowHeight);
+    float renderScale = 1;
 
-    Texture2D GameSprites = LoadTexture("sprites/spritesheet.png");
     Texture2D tileTexture = LoadTexture("sprites/texture.png");
     Texture2D playerTexture = LoadTexture("sprites/player.png");
 
@@ -48,32 +43,71 @@ int main()
         0,
         1};
 
+    short playerPixelX = 0;
+    short playerPixelY = 0;
     Vector2 playerPos = {0, 0};
+    short playerSpeed = 300;
 
     while (!WindowShouldClose())
     {
-        float deltaTime = GetFrameTime();
         windowWidth = GetScreenWidth();
         windowHeight = GetScreenHeight();
 
-        short speed = 50;
+        Vector2 playerMovement = {0, 0};
+
         if (IsKeyDown(KEY_RIGHT))
-            playerPos.x += deltaTime * speed;
+            playerMovement.x++;
         if (IsKeyDown(KEY_LEFT))
-            playerPos.x -= deltaTime * speed;
+            playerMovement.x--;
         if (IsKeyDown(KEY_DOWN))
-            playerPos.y += deltaTime * speed;
+            playerMovement.y++;
         if (IsKeyDown(KEY_UP))
-            playerPos.y -= deltaTime * speed;
+            playerMovement.y--;
 
-        camera.target = playerPos;
+        if (playerMovement.x != 0 || playerMovement.y != 0)
+        {
+            Vector2 normailised = Vector2Normalize(playerMovement);
+            Vector2 scaled = Vector2Scale(normailised, GetFrameTime() * playerSpeed);
+            playerPos = Vector2Add(playerPos, scaled);
+        }
+        else
+        {
+            playerPos.x = roundf(playerPos.x);
+            playerPos.y = roundf(playerPos.y);
+        }
 
-        // Update the render scale when the window size changes
-        if (IsWindowResized())
-            renderScale = GetMaxRenderScale(windowWidth, windowHeight);
+        playerPixelX = playerPos.x;
+        playerPixelY = playerPos.y;
 
-        BeginTextureMode(renderTexture); // Draw game content
-        BeginMode2D(camera);             // Draw in camera view
+        camera.target.x = playerPixelX;
+        camera.target.y = playerPixelY;
+
+        /*
+        ===How drawing works!===
+        BeginDrawing();
+
+            BeginTextureMode(renderTexture);
+
+                BeginMode2D(camera);
+
+                    Here you draw the game content (the world and entities) which will then automatically be offset by the camera position
+
+                EndDrawing();
+
+                The camera automatically takes what it sees and draws it to the current context (in this case, the renderTexture)
+                Here you can also draw the inventory or other hud stuff that you want to be pixel perfect
+
+            EndTextureMode();
+
+            Here you draw the renderTexture to the screen at an appropriate position and scale
+            You can also draw debug stuff that will not be pixel perfect
+
+        EndMode2D();
+        */
+
+        BeginDrawing();
+        BeginTextureMode(renderTexture);
+        BeginMode2D(camera);
 
         ClearBackground(LIGHTGRAY);
 
@@ -84,19 +118,28 @@ int main()
             {
                 if ((x + y) % 2 == 0)
                 {
-                    DrawTexture(tileTexture, x * TILE_SIZE_PIXELS, y * TILE_SIZE_PIXELS, WHITE);
+                    DrawTextureEx(
+                        tileTexture,
+                        (Vector2){x * TILE_SIZE_PIXELS, y * TILE_SIZE_PIXELS},
+                        0,
+                        PIXELS_PER_UNIT,
+                        WHITE);
                 }
             }
         }
 
-        DrawTexture(playerTexture, round(playerPos.x) - 8, round(playerPos.y) - 9, WHITE);
+        DrawTextureEx(
+            playerTexture,
+            (Vector2){playerPixelX, playerPixelY},
+            0,
+            PIXELS_PER_UNIT,
+            WHITE);
 
         EndMode2D(); // Draw pixel perfect, but not in camera view
 
         EndTextureMode();
 
         // Draw render and debug
-        BeginDrawing();
         ClearBackground(BLACK);
 
         short renderTargetWidth = RENDER_WIDTH_PIXELS * renderScale;
@@ -106,7 +149,7 @@ int main()
             (Rectangle){
                 0,
                 0,
-                RENDER_WIDTH_PIXELS,
+                renderTexture.texture.width,
                 -renderTexture.texture.height}, // Negative, because textures are upside-down
             (Rectangle){
                 (windowWidth - renderTargetWidth) * 0.5,
@@ -118,7 +161,7 @@ int main()
             WHITE);
 
         // Debug drawing
-        /*for (short x = 0; x < windowWidth; x += RENDER_WIDTH_PIXELS)
+        /* for (short x = 0; x < windowWidth; x += RENDER_WIDTH_PIXELS)
         { DrawLine(x, 0, x, windowHeight, RED); }
         for (short y = 0; y < windowHeight; y += RENDER_HEIGHT_PIXELS)
         { DrawLine(0, y, windowWidth, y, RED); } */
