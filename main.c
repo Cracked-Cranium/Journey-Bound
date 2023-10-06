@@ -22,38 +22,54 @@
 #define RENDER_WIDTH_PIXELS (RENDER_WIDTH_UNITS * PIXELS_PER_UNIT)
 #define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_UNITS * PIXELS_PER_UNIT)
 
+float GetMaxRenderScale(short window_width, short window_height)
+{
+    // targetSize = renderSize * renderScale
+    // renderScale = targetSize / renderSize
+
+    float horizontal_scale = window_width / (float)RENDER_WIDTH_PIXELS;
+    float vertical_scale = window_height / (float)RENDER_HEIGHT_PIXELS;
+
+    return fminf(horizontal_scale, vertical_scale);
+}
+
 int main()
 {
     Tile map[256 * 6];
-    short windowWidth = RENDER_WIDTH_PIXELS * 4.5;
-    short windowHeight = RENDER_HEIGHT_PIXELS * 4.5;
+    short window_width = RENDER_WIDTH_PIXELS;
+    short window_height = RENDER_HEIGHT_PIXELS;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE); // Make the window resizeble
-    InitWindow(windowWidth, windowHeight, "Journey-Bound window testing");
+    InitWindow(window_width, window_height, "Journey-Bound window testing");
 
-    RenderTexture2D renderTexture = LoadRenderTexture(RENDER_WIDTH_PIXELS, RENDER_HEIGHT_PIXELS); // The game will be rendered to a texture before being scaled to fit the players window
-    float renderScale = 1;
+    RenderTexture2D game_render_texture = LoadRenderTexture(RENDER_WIDTH_PIXELS, RENDER_HEIGHT_PIXELS); // The game will be rendered to a texture before being scaled to fit the players window
+    float render_scale = 0.75;
 
-    Texture2D tileTexture = LoadTexture("sprites/texture.png");
-    Texture2D playerTexture = LoadTexture("sprites/player.png");
+    Texture2D tile_texture = LoadTexture("sprites/texture.png");
+    Texture2D player_texture = LoadTexture("sprites/player.png");
 
-    Camera2D camera = (Camera2D){
+    Camera2D game_camera = (Camera2D){
         {RENDER_WIDTH_PIXELS * 0.5, RENDER_HEIGHT_PIXELS * 0.5},
         {0, 0},
         0,
         1};
 
-    short playerPixelX = 0;
-    short playerPixelY = 0;
-    Vector2 playerPos = {0, 0};
-    short playerSpeed = 300;
+    short player_pixel_x = 0;
+    short player_pixel_y = 0;
+    Vector2 player_position = {0, 0};
+    short player_speed = 256;
 
     while (!WindowShouldClose())
     {
-        windowWidth = GetScreenWidth();
-        windowHeight = GetScreenHeight();
+        window_width = GetScreenWidth();
+        window_height = GetScreenHeight();
 
-        Vector2 playerMovement = {0, 0};
+        if (IsWindowResized())
+        {
+            render_scale = GetMaxRenderScale(window_width, window_height);
+        }
+
+        Vector2 player_movement = {0, 0};
 
         if (IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT))
             playerMovement.x++;
@@ -64,50 +80,50 @@ int main()
         if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
             playerMovement.y--;
 
-        if (playerMovement.x != 0 || playerMovement.y != 0)
+        if (player_movement.x != 0 || player_movement.y != 0)
         {
-            Vector2 normailised = Vector2Normalize(playerMovement);
-            Vector2 scaled = Vector2Scale(normailised, GetFrameTime() * playerSpeed);
-            playerPos = Vector2Add(playerPos, scaled);
+            Vector2 normalised = Vector2Normalize(player_movement);
+            Vector2 scaled = Vector2Scale(normalised, GetFrameTime() * player_speed);
+            player_position = Vector2Add(player_position, scaled);
         }
         else
         {
-            playerPos.x = roundf(playerPos.x);
-            playerPos.y = roundf(playerPos.y);
+            player_position.x = roundf(player_position.x);
+            player_position.y = roundf(player_position.y);
         }
 
-        playerPixelX = playerPos.x;
-        playerPixelY = playerPos.y;
+        player_pixel_x = player_position.x;
+        player_pixel_y = player_position.y;
 
-        camera.target.x = playerPixelX;
-        camera.target.y = playerPixelY;
+        game_camera.target.x = player_pixel_x;
+        game_camera.target.y = player_pixel_y;
 
         /*
         ===How drawing works!===
         BeginDrawing();
 
-            BeginTextureMode(renderTexture);
+            BeginTextureMode(game_render_texture);
 
-                BeginMode2D(camera);
+                BeginMode2D(game_camera);
 
-                    Here you draw the game content (the world and entities) which will then automatically be offset by the camera position
+                    Here you draw the game content (the world and entities) which will then automatically be offset by the game_camera position
 
                 EndDrawing();
 
-                The camera automatically takes what it sees and draws it to the current context (in this case, the renderTexture)
+                The game_camera automatically takes what it sees and draws it to the current context (in this case, the game_render_texture)
                 Here you can also draw the inventory or other hud stuff that you want to be pixel perfect
 
             EndTextureMode();
 
-            Here you draw the renderTexture to the screen at an appropriate position and scale
+            Here you draw the game_render_texture to the screen at an appropriate position and scale
             You can also draw debug stuff that will not be pixel perfect
 
         EndMode2D();
         */
 
         BeginDrawing();
-        BeginTextureMode(renderTexture);
-        BeginMode2D(camera);
+        BeginTextureMode(game_render_texture);
+        BeginMode2D(game_camera);
 
         ClearBackground(LIGHTGRAY);
 
@@ -119,7 +135,7 @@ int main()
                 if ((x + y) % 2 == 0)
                 {
                     DrawTextureEx(
-                        tileTexture,
+                        tile_texture,
                         (Vector2){x * TILE_SIZE_PIXELS, y * TILE_SIZE_PIXELS},
                         0,
                         PIXELS_PER_UNIT,
@@ -129,8 +145,8 @@ int main()
         }
 
         DrawTextureEx(
-            playerTexture,
-            (Vector2){playerPixelX, playerPixelY},
+            player_texture,
+            (Vector2){player_pixel_x, player_pixel_y},
             0,
             PIXELS_PER_UNIT,
             WHITE);
@@ -142,20 +158,20 @@ int main()
         // Draw render and debug
         ClearBackground(BLACK);
 
-        short renderTargetWidth = RENDER_WIDTH_PIXELS * renderScale;
-        short renderTargetHeight = RENDER_HEIGHT_PIXELS * renderScale;
+        short render_target_width = RENDER_WIDTH_PIXELS * render_scale;
+        short render_target_height = RENDER_HEIGHT_PIXELS * render_scale;
         DrawTexturePro(
-            renderTexture.texture,
+            game_render_texture.texture,
             (Rectangle){
                 0,
                 0,
-                renderTexture.texture.width,
-                -renderTexture.texture.height}, // Negative, because textures are upside-down
+                game_render_texture.texture.width,
+                -game_render_texture.texture.height}, // Negative, because textures are upside-down
             (Rectangle){
-                (windowWidth - renderTargetWidth) * 0.5,
-                (windowHeight - renderTargetHeight) * 0.5,
-                renderTargetWidth,
-                renderTargetHeight},
+                (window_width - render_target_width) * 0.5,
+                (window_height - render_target_height) * 0.5,
+                render_target_width,
+                render_target_height},
             Vector2Zero(),
             0,
             WHITE);
