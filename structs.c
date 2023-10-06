@@ -1,10 +1,9 @@
 #include "raylib.h"
-typedef struct Tile
-{
-    short base_texture_id;
-    short occupant_texture_id;
-    bool solid;
-} Tile;
+
+
+// -----------------------------------------
+// OBJECTS
+// -----------------------------------------
 
 typedef struct Item
 {
@@ -31,3 +30,23 @@ typedef struct Player
     Item *main_inventory;
     unsigned char equipment[8];
 } Player;
+
+
+// -----------------------------------------
+// WORLD / MAP
+// -----------------------------------------
+
+typedef struct Tile
+{
+    short base_texture_id;
+    short occupant_texture_id; // ?
+    bool solid;
+} Tile;
+
+typedef struct Chunk
+{
+    Tile tiles[16 * 16];
+    Object *objs;
+    DynObject *dyn_objs
+} Chunk;
+
