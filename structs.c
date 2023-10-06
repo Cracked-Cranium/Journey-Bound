@@ -44,8 +44,10 @@ typedef struct Tile
 
 typedef struct Chunk
 {
-    Tile tiles[16 * 16];
-    Object *objs;
-    DynObject *dyn_objs
+    short tiles[CHUNK_SIZE_TILES * CHUNK_SIZE_TILES];
+    short chunk_x;
+    short chunk_y;
+    //Object *objs;
+    //DynObject *dyn_objs;
 } Chunk;
 
