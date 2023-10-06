@@ -11,12 +11,6 @@
 #define RENDER_WIDTH_PIXELS (RENDER_WIDTH_TILES * TILE_SIZE_PIXELS)
 #define RENDER_HEIGHT_PIXELS (RENDER_HEIGHT_TILES * TILE_SIZE_PIXELS)
 
-typedef struct test
-{
-    short item1;
-    char item2;
-} test;
-
 // Returns the largest scale the render could be without overflowing the window
 short GetMaxRenderScale(short windowWidth, short windowHeight)
 {
@@ -34,7 +28,6 @@ short GetMaxRenderScale(short windowWidth, short windowHeight)
 
 int main()
 {
-    sizeof(test);
     Tile map[256 * 6];
     short windowWidth = RENDER_WIDTH_PIXELS * 4.5;
     short windowHeight = RENDER_HEIGHT_PIXELS * 4.5;
