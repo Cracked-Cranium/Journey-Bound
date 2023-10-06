@@ -71,9 +71,8 @@ int main()
         if (IsWindowResized())
             renderScale = GetMaxRenderScale(windowWidth, windowHeight);
 
-        //===Draw game content===
-        BeginTextureMode(renderTexture);
-        BeginMode2D(camera);
+        BeginTextureMode(renderTexture); // Draw game content
+        BeginMode2D(camera); // Draw in camera view
 
         ClearBackground(LIGHTGRAY);
 
@@ -91,10 +90,11 @@ int main()
 
         DrawTexture(playerTexture, round(playerPos.x) - 8, round(playerPos.y) - 9, WHITE);
 
-        EndMode2D();
+        EndMode2D(); // Draw pixel perfect, but not in camera view
+        
         EndTextureMode();
 
-        //===Draw render and debug===
+        // Draw render and debug
         BeginDrawing();
         ClearBackground(BLACK);
 
