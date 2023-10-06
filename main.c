@@ -3,6 +3,7 @@
 
 #include "enums.c"
 #include "structs.c"
+#include "item_functions.c"
 
 #define TILE_SIZE_PIXELS (short)16
 #define RENDER_WIDTH_TILES (short)18

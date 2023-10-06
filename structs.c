@@ -6,6 +6,11 @@ typedef struct Tile
     bool solid;
 } Tile;
 
+typedef struct Item
+{
+    unsigned short data;
+} Item;
+
 typedef struct Object
 {
     unsigned short texture_id;
@@ -16,13 +21,13 @@ typedef struct DynObject
 {
     unsigned short texture_id;
     short health;
-    unsigned short primitve_inventory[8];
+    Item primitve_inventory[8];
     Vector2 pos;
 } DynObject;
 
 typedef struct Player
 {
     DynObject core;
-    short *main_inventory;
+    Item *main_inventory;
     unsigned char equipment[8];
 } Player;
