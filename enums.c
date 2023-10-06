@@ -1,8 +1,8 @@
 typedef enum TileId
 {
-    NONE = 0,
-    DIRT = 1,
-    GRASS = 2,
-    STONE = 3,
-    WOOD = 4,
+    TILE_NONE = 0,
+    TILE_DIRT = 1,
+    TILE_GRASS = 2,
+    TILE_STONE = 3,
+    TILE_WOOD = 4,
 } TileId;
