@@ -1,5 +1,11 @@
 #include "raylib.h"
 
+typedef struct Short2
+{
+    short x;
+    short y;
+} Short2;
+
 // -----------------------------------------
 // OBJECTS
 // -----------------------------------------
