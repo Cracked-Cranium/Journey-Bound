@@ -22,15 +22,16 @@
 #define MAP_HEIGHT_TILES (short)32
 
 #define CHUNK_SIZE_TILES (short)8
+#define CHUNK_COUNT (short)9
 
 #include "enums.c"
 #include "structs.c"
 #include "item_functions.c"
 
+//Returns the maximum render scale that still fits in the window
 float GetMaxRenderScale(short window_width, short window_height)
 {
-    // targetSize = renderSize * renderScale
-    // renderScale = targetSize / renderSize
+    // targetSize = renderSize * renderScale <=> renderScale = targetSize / renderSize
 
     float horizontal_scale = window_width / (float)RENDER_WIDTH_PIXELS;
     float vertical_scale = window_height / (float)RENDER_HEIGHT_PIXELS;
@@ -38,7 +39,8 @@ float GetMaxRenderScale(short window_width, short window_height)
     return fminf(horizontal_scale, vertical_scale);
 }
 
-void DrawTileFromIndex(short texture_index, short pos_x_tiles, short pos_y_tiles, Texture2D *sprite_sheet_ptr)
+//Draws a ground tile texture from the corresponding index
+void DrawTileFromIndex(short texture_index, Short2 pos_tiles, Texture2D *sprite_sheet_ptr)
 {
     DrawTexturePro(
         *sprite_sheet_ptr,
@@ -48,8 +50,8 @@ void DrawTileFromIndex(short texture_index, short pos_x_tiles, short pos_y_tiles
             TILE_SIZE_UNITS,
             TILE_SIZE_UNITS},
         (Rectangle){
-            pos_x_tiles * TILE_SIZE_PIXELS,
-            pos_y_tiles * TILE_SIZE_PIXELS,
+            pos_tiles.x * TILE_SIZE_PIXELS,
+            pos_tiles.y * TILE_SIZE_PIXELS,
             TILE_SIZE_PIXELS,
             TILE_SIZE_PIXELS},
         Vector2Zero(),
@@ -65,40 +67,51 @@ void DrawGroundTiles(short game_map[], Texture2D *sprite_sheet_ptr)
         {
             short index = game_map[x + y * MAP_WIDTH_TILES];
 
-            DrawTileFromIndex(index, x, y, sprite_sheet_ptr);
+            DrawTileFromIndex(index, (Short2){x, y}, sprite_sheet_ptr);
         }
     }
 }
 
-void LoadChunk(short game_map[], short chunk_x, short chunk_y, Chunk *target)
+//Loads tiles from the game map to an array of chunks
+void LoadChunks(short game_map[], Short2 center_chunk_pos, Chunk *target)
 {
-    (*target).chunk_x = chunk_x;
-    (*target).chunk_y = chunk_y;
-    
-    short chunk_index = chunk_x * CHUNK_SIZE_TILES + chunk_y * CHUNK_SIZE_TILES * MAP_WIDTH_TILES;
-
-    for (short y = 0; y < CHUNK_SIZE_TILES; y++)
+    for (short n = 0; n < CHUNK_COUNT; n++)
     {
-        for (short x = 0; x < CHUNK_SIZE_TILES; x++)
+        Short2 offset_pos = Short2Add(
+            center_chunk_pos,
+            (Short2){
+                (n % 3) - 1,
+                (n / 3) - 1});
+        target[n].chunk_pos = offset_pos;
+
+        short chunk_index = offset_pos.x * CHUNK_SIZE_TILES + offset_pos.y * CHUNK_SIZE_TILES * MAP_WIDTH_TILES;
+
+        for (short y = 0; y < CHUNK_SIZE_TILES; y++)
         {
-            (*target).tiles[x + y * CHUNK_SIZE_TILES] = game_map[chunk_index + x + y * MAP_WIDTH_TILES];
+            for (short x = 0; x < CHUNK_SIZE_TILES; x++)
+            {
+                target[n].tiles[x + y * CHUNK_SIZE_TILES] = game_map[chunk_index + x + y * MAP_WIDTH_TILES];
+            }
         }
     }
 }
 
-void DrawChunk(Chunk *chunk_ptr, Texture2D *sprite_sheet_ptr)
+//Draws the contents of all chunks in a chunk array
+void DrawChunks(Chunk *chunk_ptr, Texture2D *sprite_sheet_ptr)
 {
-    for (short y = 0; y < CHUNK_SIZE_TILES; y++)
+    for (short n = 0; n < CHUNK_COUNT; n++)
     {
-        for (short x = 0; x < CHUNK_SIZE_TILES; x++)
+        for (short y = 0; y < CHUNK_SIZE_TILES; y++)
         {
-            short texture_index = (*chunk_ptr).tiles[x + y * CHUNK_SIZE_TILES];
-            
-            DrawTileFromIndex(
-                texture_index,
-                (*chunk_ptr).chunk_x * CHUNK_SIZE_TILES + x,
-                (*chunk_ptr).chunk_y * CHUNK_SIZE_TILES + y,
-                sprite_sheet_ptr);
+            for (short x = 0; x < CHUNK_SIZE_TILES; x++)
+            {
+                short texture_index = chunk_ptr[n].tiles[x + y * CHUNK_SIZE_TILES];
+
+                DrawTileFromIndex(
+                    texture_index,
+                    Short2Add(Short2Scale(chunk_ptr[n].chunk_pos, CHUNK_SIZE_TILES), (Short2){x, y}),
+                    sprite_sheet_ptr);
+            }
         }
     }
 }
@@ -139,27 +152,20 @@ int main()
         {
             game_map[x + y * MAP_WIDTH_TILES] = (short)0;
 
-            if (x % 2 == 0)
-            {
-                game_map[x + y * MAP_WIDTH_TILES] = (short)2;
-            }
+            //Make pattern
+            if (x % 5 == 0 && y % 6 == 0) game_map[x + y * MAP_WIDTH_TILES] = (short)16;
 
-            if (y % 3 == 0)
-            {
-                game_map[x + y * MAP_WIDTH_TILES] = (short)3;
-            }
+            if (x % 4 == 0 && y % 5 == 0) game_map[x + y * MAP_WIDTH_TILES] = (short)3;
         }
     }
 
     // Prelimenary chunk system
-    Chunk current_chunk;
+    Chunk current_chunks[CHUNK_COUNT];
 
-    LoadChunk(game_map, 0, 0, &current_chunk);
+    LoadChunks(game_map, (Short2){0, 0}, current_chunks);
 
-    short player_pos_x_chunk;
-    short player_pos_y_chunk;
-    short player_pos_x_chunk_prev;
-    short player_pos_y_chunk_prev;
+    Short2 player_pos_chunk;
+    Short2 player_pos_chunk_prev;
 
     while (!WindowShouldClose())
     {
@@ -192,17 +198,16 @@ int main()
         game_camera.target.x = player_pixel_x + TILE_SIZE_PIXELS / 2;
         game_camera.target.y = player_pixel_y + TILE_SIZE_PIXELS / 2;
 
-        player_pos_x_chunk = player_pixel_x / TILE_SIZE_PIXELS / CHUNK_SIZE_TILES;
-        player_pos_y_chunk = player_pixel_y / TILE_SIZE_PIXELS / CHUNK_SIZE_TILES;
+        player_pos_chunk = (Short2){
+            player_pixel_x / TILE_SIZE_PIXELS / CHUNK_SIZE_TILES,
+            player_pixel_y / TILE_SIZE_PIXELS / CHUNK_SIZE_TILES};
 
-        if (player_pos_x_chunk != player_pos_x_chunk_prev || player_pos_y_chunk != player_pos_y_chunk_prev)
+        if (player_pos_chunk.x != player_pos_chunk_prev.x || player_pos_chunk.y != player_pos_chunk_prev.y)
         {
-            LoadChunk(game_map, player_pos_x_chunk, player_pos_y_chunk, &current_chunk);
+            LoadChunks(game_map, player_pos_chunk, current_chunks);
         }
 
-        player_pos_x_chunk_prev = player_pos_x_chunk;
-        player_pos_y_chunk_prev = player_pos_y_chunk;
-        
+        player_pos_chunk_prev = player_pos_chunk;
 
         window_width = GetScreenWidth();
         window_height = GetScreenHeight();
@@ -244,8 +249,8 @@ int main()
         BeginMode2D(game_camera);
 
         // Draw tiles
-        //DrawGroundTiles(game_map, &ground_tiles_sprite_sheet);
-        DrawChunk(&current_chunk, &ground_tiles_sprite_sheet);
+        // DrawGroundTiles(game_map, &ground_tiles_sprite_sheet);
+        DrawChunks(current_chunks, &ground_tiles_sprite_sheet);
 
         // Draw player
         DrawTextureEx(

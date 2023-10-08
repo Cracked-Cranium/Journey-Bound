@@ -1,10 +1,41 @@
 #include "raylib.h"
 
+// -----------------------------------------
+// Short2 struct and functions
+// -----------------------------------------
+
+//Like Vector2, but with shorts
 typedef struct Short2
 {
     short x;
     short y;
 } Short2;
+
+//Returns the scaled vector (multiplies both values)
+Short2 Short2Scale(Short2 in, short scale)
+{
+    return (Short2){
+        in.x * scale,
+        in.y * scale
+    };
+}
+
+//Divides both values and returns result
+Short2 Short2Divide(Short2 in, short divisor)
+{
+    return (Short2){
+        in.x / divisor,
+        in.y / divisor
+    };
+}
+
+Short2 Short2Add(Short2 in1, Short2 in2)
+{
+    return (Short2){
+        in1.x + in2.x,
+        in1.y + in2.y
+    };
+}
 
 // -----------------------------------------
 // OBJECTS
@@ -51,8 +82,7 @@ typedef struct Tile
 typedef struct Chunk
 {
     short tiles[CHUNK_SIZE_TILES * CHUNK_SIZE_TILES];
-    short chunk_x;
-    short chunk_y;
+    Short2 chunk_pos;
     //Object *objs;
     //DynObject *dyn_objs;
 } Chunk;
