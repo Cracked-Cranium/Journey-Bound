@@ -24,6 +24,8 @@
 #define CHUNK_SIZE_TILES (short)8
 #define CHUNK_COUNT (short)9
 
+// #define PLAYER_SPRINT_SPEED (float)2
+
 #include "enums.c"
 #include "structs.c"
 #include "item_functions.c"
@@ -142,6 +144,7 @@ int main()
     short player_pixel_y = 0;
     Vector2 player_position = {0, 0};
     short player_speed = 256;
+    short player_sprint_speed = 1;
 
     // Preliminary map array
     short game_map[MAP_WIDTH_TILES * MAP_HEIGHT_TILES];
@@ -171,19 +174,24 @@ int main()
     {
         Vector2 player_movement = {0, 0};
 
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT))
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT))
             player_movement.x++;
-        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_LEFT))
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT))
             player_movement.x--;
         if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN))
             player_movement.y++;
         if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
             player_movement.y--;
+        
+        if (IsKeyDown(KEY_LEFT_SHIFT))
+            player_sprint_speed = 2;
+        else
+            player_sprint_speed = 1;
 
         if (player_movement.x != 0 || player_movement.y != 0)
         {
             Vector2 normalised = Vector2Normalize(player_movement);
-            Vector2 scaled = Vector2Scale(normalised, GetFrameTime() * player_speed);
+            Vector2 scaled = Vector2Scale(normalised, GetFrameTime() * player_speed * player_sprint_speed);
             player_position = Vector2Add(player_position, scaled);
         }
         else
