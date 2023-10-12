@@ -111,4 +111,6 @@ void AddDCA(DynChunkArr *arr, Chunk chunk)
 
     (*arr).chunks[(*arr).count] = chunk;
     (*arr).count++;
+
+    puts("#Added chunk#");
 }

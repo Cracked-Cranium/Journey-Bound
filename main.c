@@ -1,4 +1,5 @@
 #include "stdio.h"
+#include "stdlib.h"
 
 #include "raylib.h"
 #include "raymath.h"
@@ -30,7 +31,7 @@
 #include "structs.c"
 #include "item_functions.c"
 
-//Returns the maximum render scale that still fits in the window
+// Returns the maximum render scale that still fits in the window
 float GetMaxRenderScale(short window_width, short window_height)
 {
     // targetSize = renderSize * renderScale <=> renderScale = targetSize / renderSize
@@ -41,7 +42,7 @@ float GetMaxRenderScale(short window_width, short window_height)
     return fminf(horizontal_scale, vertical_scale);
 }
 
-//Draws a ground tile texture from the corresponding index
+// Draws a ground tile texture from the corresponding index
 void DrawTileFromIndex(short texture_index, Short2 pos_tiles, Texture2D *sprite_sheet_ptr)
 {
     DrawTexturePro(
@@ -74,7 +75,7 @@ void DrawGroundTiles(short game_map[], Texture2D *sprite_sheet_ptr)
     }
 }
 
-//Loads tiles from the game map to a chunk
+// Loads tiles from the game map to a chunk
 Chunk LoadChunk(short game_map[], Short2 target_chunk_pos)
 {
     Chunk chunk;
@@ -89,11 +90,11 @@ Chunk LoadChunk(short game_map[], Short2 target_chunk_pos)
             chunk.tiles[x + y * CHUNK_SIZE_TILES] = game_map[chunk_index + x + y * MAP_WIDTH_TILES];
         }
     }
-    
+
     return chunk;
 }
 
-//Draws the contents of all chunks in a chunk array
+// Draws the contents of all chunks in a chunk array
 void DrawChunks(DynChunkArr arr, Texture2D *sprite_sheet_ptr)
 {
     for (short n = 0; n < arr.count; n++)
@@ -150,10 +151,12 @@ int main()
         {
             game_map[x + y * MAP_WIDTH_TILES] = (short)0;
 
-            //Make pattern
-            if (x % 5 == 0 && y % 6 == 0) game_map[x + y * MAP_WIDTH_TILES] = (short)16;
+            // Make pattern
+            if (x % 5 == 0 && y % 6 == 0)
+                game_map[x + y * MAP_WIDTH_TILES] = (short)16;
 
-            if (x % 4 == 0 && y % 5 == 0) game_map[x + y * MAP_WIDTH_TILES] = (short)3;
+            if (x % 4 == 0 && y % 5 == 0)
+                game_map[x + y * MAP_WIDTH_TILES] = (short)3;
         }
     }
 
@@ -161,9 +164,9 @@ int main()
     Short2 player_pos_chunk;
     Short2 player_pos_chunk_prev;
 
-    DynChunkArr generatedChunks;
-    InitDCA(&generatedChunks, 2);
-    AddDCA(&generatedChunks, LoadChunk(&game_map, (Short2){0, 0}));
+    DynChunkArr game_generated_chunks;
+    InitDCA(&game_generated_chunks, 2);
+    AddDCA(&game_generated_chunks, LoadChunk(game_map, (Short2){0, 0}));
 
     while (!WindowShouldClose())
     {
@@ -177,7 +180,7 @@ int main()
             player_movement.y++;
         if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP))
             player_movement.y--;
-        
+
         if (IsKeyDown(KEY_LEFT_SHIFT))
             player_sprint_speed = 2;
         else
@@ -201,13 +204,29 @@ int main()
         game_camera.target.x = player_pixel_x + TILE_SIZE_PIXELS / 2;
         game_camera.target.y = player_pixel_y + TILE_SIZE_PIXELS / 2;
 
+        // Whack formula because floor can handle negatives as opposed to truncating
         player_pos_chunk = (Short2){
-            player_pixel_x / TILE_SIZE_PIXELS / CHUNK_SIZE_TILES,
-            player_pixel_y / TILE_SIZE_PIXELS / CHUNK_SIZE_TILES};
+            (short)floorf(((float)player_pixel_x / TILE_SIZE_PIXELS) / CHUNK_SIZE_TILES),
+            (short)floorf(((float)player_pixel_y / TILE_SIZE_PIXELS) / CHUNK_SIZE_TILES)};
 
+        // When entering a different chunk
         if (player_pos_chunk.x != player_pos_chunk_prev.x || player_pos_chunk.y != player_pos_chunk_prev.y)
         {
-            AddDCA(&generatedChunks, LoadChunk(&game_map, player_pos_chunk));
+            bool already_exists = false;
+            
+            for (short i = 0; i < game_generated_chunks.count; i++)
+            {
+                if (
+                    game_generated_chunks.chunks[i].chunk_pos.x == player_pos_chunk.x &&
+                    game_generated_chunks.chunks[i].chunk_pos.y == player_pos_chunk.y)
+                {
+                    already_exists = true;
+                    break;
+                }
+            }
+
+            // Only adds new chunk if it's not already loaded
+            if (!already_exists) AddDCA(&game_generated_chunks, LoadChunk(game_map, player_pos_chunk));
         }
 
         player_pos_chunk_prev = player_pos_chunk;
@@ -253,7 +272,7 @@ int main()
 
         // Draw tiles
         // DrawGroundTiles(game_map, &ground_tiles_sprite_sheet);
-        DrawChunks(generatedChunks, &ground_tiles_sprite_sheet);
+        DrawChunks(game_generated_chunks, &ground_tiles_sprite_sheet);
 
         // Draw player
         DrawTextureEx(
