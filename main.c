@@ -75,19 +75,34 @@ void DrawGroundTiles(short game_map[], Texture2D *sprite_sheet_ptr)
     }
 }
 
+short GetTileFromSeed(unsigned short seed, Short2 tile_pos)
+{
+    if (tile_pos.x % ((seed >> 0) % 16) == 0 && tile_pos.y % ((seed >> 4) % 16) == 0) return 16;
+
+    if (tile_pos.x % ((seed >> 8) % 16) == 0 && tile_pos.y % ((seed >> 12) % 16) == 0) return 3;
+    
+    return 0;
+}
+
 // Loads tiles from the game map to a chunk
 Chunk LoadChunk(short game_map[], Short2 target_chunk_pos)
 {
     Chunk chunk;
     chunk.chunk_pos = target_chunk_pos;
 
-    short chunk_index = target_chunk_pos.x * CHUNK_SIZE_TILES + target_chunk_pos.y * CHUNK_SIZE_TILES * MAP_WIDTH_TILES;
+    //short chunk_index = target_chunk_pos.x * CHUNK_SIZE_TILES + target_chunk_pos.y * CHUNK_SIZE_TILES * MAP_WIDTH_TILES;
 
     for (short y = 0; y < CHUNK_SIZE_TILES; y++)
     {
         for (short x = 0; x < CHUNK_SIZE_TILES; x++)
         {
-            chunk.tiles[x + y * CHUNK_SIZE_TILES] = game_map[chunk_index + x + y * MAP_WIDTH_TILES];
+            //chunk.tiles[x + y * CHUNK_SIZE_TILES] = game_map[chunk_index + x + y * MAP_WIDTH_TILES];
+            
+            Short2 tile_pos = {
+                x + target_chunk_pos.x * CHUNK_SIZE_TILES,
+                y + target_chunk_pos.y * CHUNK_SIZE_TILES};
+
+            chunk.tiles[x + y * CHUNK_SIZE_TILES] = GetTileFromSeed((unsigned short)0x6795, tile_pos);
         }
     }
 
@@ -213,7 +228,7 @@ int main()
         if (player_pos_chunk.x != player_pos_chunk_prev.x || player_pos_chunk.y != player_pos_chunk_prev.y)
         {
             bool already_exists = false;
-            
+
             for (short i = 0; i < game_generated_chunks.count; i++)
             {
                 if (
@@ -226,7 +241,8 @@ int main()
             }
 
             // Only adds new chunk if it's not already loaded
-            if (!already_exists) AddDCA(&game_generated_chunks, LoadChunk(game_map, player_pos_chunk));
+            if (!already_exists)
+                AddDCA(&game_generated_chunks, LoadChunk(game_map, player_pos_chunk));
         }
 
         player_pos_chunk_prev = player_pos_chunk;
